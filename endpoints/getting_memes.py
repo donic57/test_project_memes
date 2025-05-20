@@ -30,6 +30,7 @@ class GettingMemes(Endpoint):
 
     @allure.step('Вызов get запроса по id')
     def get_one_meme(self, meme_id, authorize):
-        self.response = requests.get(f'{self.url}/{meme_id}', headers=authorize)
+        self.response = requests.get(
+            f'{self.url}/{meme_id}', headers=authorize)
         self.json = self.response.json()
         return self.json
