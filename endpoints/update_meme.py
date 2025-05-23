@@ -43,10 +43,18 @@ class UpdateMeme(Endpoint):
         self.response = requests.put(
             f'{self.url}/{meme_id}', headers=authorize, json=body)
         self.json = self.response.json()
-        return self.json
+        try:
+            self.json = self.response.json()  # сохраняем JSON в self.json
+        except ValueError:
+            self.json = None  # если нет JSON
+        return self.response  # возвращаем response
 
     def bad_update_body(self, authorize, body):
         meme_id = 354
         self.response = requests.put(
             f'{self.url}/{meme_id}', headers=authorize, json=body)
-        return self.response
+        try:
+            self.json = self.response.json()  # сохраняем JSON в self.json
+        except ValueError:
+            self.json = None  # если нет JSON
+        return self.response  # возвращаем response

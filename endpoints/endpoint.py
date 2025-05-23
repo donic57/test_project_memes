@@ -7,6 +7,7 @@ class Endpoint:
 
     def __init__(self):
         self.url = 'http://167.172.172.115:52355/meme'
+        self.url_autorize = 'http://167.172.172.115:52355/authorize'
         self.response = None
         self.json = None
 
@@ -28,16 +29,27 @@ class Endpoint:
         print(f'Ошибка с код {status} переданы некорректные данные в запрос')
         pytest.xfail("Тест принудительно помечен как ожидаемо проваленный")
 
+    @allure.step('Проверка на код ответа 404')
+    def check_status_is_404(self, response, meme_id):
+        status = response.status_code
+        assert status == 404, \
+            f"Мем с id={meme_id} всё ещё существует! Код: {status}"
+        print(f'Ошибка с код {status} такой id не существует')
+
     @allure.step('Вызов get запроса без token')
     def get_memes_unauthorized(self):
         self.response = requests.get(self.url)
-        return self.response
+        try:
+            self.json = self.response.json()  # сохраняем JSON в self.json
+        except ValueError:
+            self.json = None  # если нет JSON
+        return self.response  # возвращаем response
 
     @allure.step('Проверка объектов в ответе и в body')
-    def check_objs_in_body(self, body):
+    def check_objs_in_body(self, meme_id, body):
         if self.json is None:
             raise ValueError(
-                "JSON response is None! Did you call get-method first?")
+                "JSON response is None")
         assert self.json['text'] == body['text'], \
             f"Expected text {body['text']}, but got {self.json['text']}"
         assert self.json['url'] == body['url'], \
@@ -49,4 +61,6 @@ class Endpoint:
         assert self.json['info'] == body['info'], \
             (f"Expected info {body['info']}, "
              f"but got {self.json['info']}")
-        assert 'id' in self.json
+        assert int(self.json['id']) == meme_id, \
+            (f"Expected id {meme_id}, "
+             f"but got {self.json['id']}")

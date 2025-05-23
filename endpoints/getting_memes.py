@@ -8,8 +8,11 @@ class GettingMemes(Endpoint):
     @allure.step('Вызов get запроса со всеми объектами')
     def get_all_memes(self, authorize):
         self.response = requests.get(self.url, headers=authorize)
-        self.json = self.response.json()
-        return self.response
+        try:
+            self.json = self.response.json()  # сохраняем JSON в self.json
+        except ValueError:
+            self.json = None  # если нет JSON
+        return self.response  # возвращаем response
 
     @allure.step('Проверка наличия всех полей в ответе')
     def check_data_response(self):
@@ -32,5 +35,8 @@ class GettingMemes(Endpoint):
     def get_one_meme(self, meme_id, authorize):
         self.response = requests.get(
             f'{self.url}/{meme_id}', headers=authorize)
-        self.json = self.response.json()
-        return self.json
+        try:
+            self.json = self.response.json()  # сохраняем JSON в self.json
+        except ValueError:
+            self.json = None  # если нет JSON
+        return self.response  # возвращаем response
