@@ -24,6 +24,16 @@ class UpdateMeme(Endpoint):
                   "text": "test_text",
                   "url": "https://ya.ru/",
                   "tags": ["test_driver", "test_driver2"],
+                  "info": ["driver", "driver2"]},
+                 {"id": 354,
+                  "text": "",
+                  "url": "https://ya.ru/",
+                  "tags": ["test_driver", "test_driver2"],
+                  "info": ["driver", "driver2"]},
+                 {"id": 354,
+                  "text": "test_text",
+                  "url": "",
+                  "tags": ["test_driver", "test_driver2"],
                   "info": ["driver", "driver2"]}
                  ]
 
@@ -39,10 +49,13 @@ class UpdateMeme(Endpoint):
         return body
 
     @allure.step('Обновление мэмов по id')
-    def update_meme(self, meme_id, authorize, body):
-        self.response = requests.put(
-            f'{self.url}/{meme_id}', headers=authorize, json=body)
-        self.json = self.response.json()
+    def update_meme(self, meme_id, body, authorize=None):
+        if authorize is None:
+            self.response = requests.put(
+                f'{self.url}/{meme_id}', json=body)
+        else:
+            self.response = requests.put(
+                f'{self.url}/{meme_id}', headers=authorize, json=body)
         try:
             self.json = self.response.json()  # сохраняем JSON в self.json
         except ValueError:

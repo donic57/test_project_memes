@@ -15,17 +15,12 @@ def authorize():
 @pytest.fixture()
 def create_meme(authorize):
     meme = CreateMeme()
-    # получаем генератор
-    generator = meme.add_meme(authorize)
-    # получаем первые значения из генератора
-    meme_id, meme_body = next(generator)
-    # возвращаем значения тесту
+    result = meme.add_meme(authorize)
+    meme_id = result.json['id']
+    meme_body = result.json
     yield meme_id, meme_body
-    try:
-        # завершаем работу генератора (выполнится finally-блок в add_meme)
-        next(generator)
-    except StopIteration:
-        pass
+    # После теста удаляем мем
+    DeleteMeme().delete_meme(meme_id, authorize)
 
 
 @pytest.fixture()

@@ -36,15 +36,6 @@ class Endpoint:
             f"Мем с id={meme_id} всё ещё существует! Код: {status}"
         print(f'Ошибка с код {status} такой id не существует')
 
-    @allure.step('Вызов get запроса без token')
-    def get_memes_unauthorized(self):
-        self.response = requests.get(self.url)
-        try:
-            self.json = self.response.json()  # сохраняем JSON в self.json
-        except ValueError:
-            self.json = None  # если нет JSON
-        return self.response  # возвращаем response
-
     @allure.step('Проверка объектов в ответе и в body')
     def check_objs_in_body(self, meme_id, body):
         if self.json is None:
