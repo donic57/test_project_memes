@@ -3,6 +3,7 @@ import pytest
 from endpoints.update_meme import UpdateMeme
 from endpoints.autorize_meme import Authorize
 from endpoints.create_meme import CreateMeme
+from data.data_test import DataTest
 import requests
 
 
@@ -63,7 +64,7 @@ def test_put_meme_unauthorized(put_meme, create_meme):
 
 @allure.story('Put')
 @allure.title('Обновление put запросом c некорректными данными')
-@pytest.mark.parametrize("body", UpdateMeme.TEST_DATA)
+@pytest.mark.parametrize("body", DataTest.TEST_DATA_BAD)
 def test_bad_put_meme(put_meme, authorize, body):
     put_meme.bad_update_body(authorize, body)
     put_meme.check_status_is_400()
@@ -108,17 +109,6 @@ def test_auth_failure():
 
 
 @allure.story('Post')
-@allure.title('Создание мэма и проверка запроса и ответа')
-def test_create_meme(authorize):
-    create_meme = CreateMeme()
-    result = create_meme.add_meme(authorize)
-    obj_id = result.json['id']
-    body = result.json
-    create_meme.check_status_is_200()
-    create_meme.check_objs_in_body(obj_id, body)
-
-
-@allure.story('Post')
 @allure.title('Создание мэма без авторизации')
 def test_create_meme_unauthorized():
     create_meme = CreateMeme()
@@ -128,7 +118,7 @@ def test_create_meme_unauthorized():
 
 @allure.story('Post')
 @allure.title('Создание неуспешного мэма с ожидаемым результатом')
-@pytest.mark.parametrize("body", CreateMeme.TEST_DATA)
+@pytest.mark.parametrize("body", DataTest.TEST_DATA)
 def test_bad_create_meme(authorize, body):
     meme = CreateMeme()
     result = meme.add_meme(authorize, body, expected_status=False)
@@ -137,8 +127,9 @@ def test_bad_create_meme(authorize, body):
 
 @allure.story('Post')
 @allure.title('Создание успешного мэма с пустыми строками')
-@pytest.mark.parametrize("body", CreateMeme.TEST_DATA_OK)
-def test_create_meme_ok(authorize, body):
-    meme = CreateMeme()
-    result = meme.add_meme(authorize, body)
-    result.check_status_is_200()
+@pytest.mark.parametrize("body", DataTest.TEST_DATA_OK)
+def test_create_meme_ok(create_meme_obj, authorize, body):
+    create_meme_obj.add_meme(authorize, body)
+    obj_id = create_meme_obj.json['id']
+    create_meme_obj.check_status_is_200()
+    create_meme_obj.check_objs_in_body(obj_id, body)

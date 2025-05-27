@@ -36,3 +36,7 @@ def put_meme():
 @pytest.fixture()
 def remove_meme():
     return DeleteMeme()
+
+@pytest.fixture()
+def create_meme_obj(authorize):
+    return CreateMeme()

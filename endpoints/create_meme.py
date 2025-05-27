@@ -5,39 +5,6 @@ from endpoints.endpoint import Endpoint
 
 class CreateMeme(Endpoint):
 
-    TEST_DATA = [
-        {
-            "text": 12345,
-            "url": "https://ya.ru/",
-            "tags": ["test_driver", "test_driver2"],
-            "info": {"description": "sdfsdfo", "color": "sdfsdf"}},
-        {
-            "text": "test_text",
-            "url": "https://ya.ru/",
-            "tags": "test_driver2",
-            "info": {"description": "sdfsdfo", "color": "sdfsdf"}},
-        {
-            "text": "test_text",
-            "url": "https://ya.ru/",
-            "tags": ["test_driver", "test_driver2"],
-            "info": ["driver", "driver2"]},
-    ]
-
-    TEST_DATA_OK = [
-        {
-            "text": "",
-            "url": "https://ya.ru/",
-            "tags": ["test_driver", "test_driver2"],
-            "info": {"description": "test_info"}
-        },
-        {
-            "text": "test_text",
-            "url": "",
-            "tags": ["test_driver", "test_driver2"],
-            "info": {"description": "test_info"}
-        }
-    ]
-
     @allure.step('Добавление мэма')
     def add_meme(self, authorize=None, body=None, expected_status=True):
         if body is None:
