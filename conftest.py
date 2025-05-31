@@ -38,5 +38,5 @@ def remove_meme():
     return DeleteMeme()
 
 @pytest.fixture()
-def create_meme_obj(authorize):
+def create_meme_obj():
     return CreateMeme()
