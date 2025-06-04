@@ -1,6 +1,5 @@
 import allure
 import pytest
-from endpoints.update_meme import UpdateMeme
 from endpoints.autorize_meme import Authorize
 from endpoints.create_meme import CreateMeme
 from data.data_test import DataTest
