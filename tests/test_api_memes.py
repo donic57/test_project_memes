@@ -66,7 +66,7 @@ def test_put_meme_unauthorized(put_meme, create_meme):
 @pytest.mark.parametrize("body", DataTest.TEST_DATA_BAD)
 def test_bad_put_meme(put_meme, authorize, body):
     put_meme.bad_update_body(authorize, body)
-    put_meme.check_status_is_400()
+    put_meme.check_status_is_403()
 
 
 @allure.story('Delete')

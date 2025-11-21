@@ -1,4 +1,3 @@
-import requests
 import allure
 import pytest
 
@@ -18,15 +17,22 @@ class Endpoint:
     @allure.step('Проверка на код ответа 401')
     def check_status_is_401(self):
         status = self.response.status_code
-        assert status == 401
         print(f'Ошибка с код {status} т.к. неавторизованный пользователь')
+        assert status == 401
         pytest.xfail("Тест принудительно помечен как ожидаемо проваленный")
 
     @allure.step('Проверка на код ответа 400')
     def check_status_is_400(self):
         status = self.response.status_code
-        assert status == 400
         print(f'Ошибка с код {status} переданы некорректные данные в запрос')
+        assert status == 400
+        pytest.xfail("Тест принудительно помечен как ожидаемо проваленный")
+
+    @allure.step('Проверка на код ответа 403')
+    def check_status_is_403(self):
+        status = self.response.status_code
+        print(f'Ошибка с код {status} переданы некорректные данные в запрос')
+        assert status == 403
         pytest.xfail("Тест принудительно помечен как ожидаемо проваленный")
 
     @allure.step('Проверка на код ответа 404')
