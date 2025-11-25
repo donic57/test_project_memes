@@ -10,8 +10,7 @@ class Authorize(Endpoint):
     def user_authorize(self):
         base_way = os.path.dirname(__file__)
         token_file_way = os.path.dirname(base_way)
-        token_data = os.path.join(
-            token_file_way, 'tests', 'token_file')
+        token_data = os.path.join(token_file_way, 'tests', 'token_file')
         body = {"name": "lyadov"}
 
         # Читаем текущий токен из файла
@@ -23,11 +22,9 @@ class Authorize(Endpoint):
 
         if self.response.status_code == 404:
             # Если токен невалидный, получаем новый
-            self.response = requests.post(
-                self.url_autorize,
-                json=body).json()
-            self.json = self.response.json()
-            new_token = self.response['token']
+            response_post = requests.post(self.url_autorize, json=body)
+            self.json = response_post.json()  # Преобразуем ответ в JSON один раз
+            new_token = self.json['token']  # Берем токен из JSON
 
             # Перезаписываем файл с новым токеном
             with open(token_data, 'w') as data_file:
@@ -41,13 +38,10 @@ class Authorize(Endpoint):
             return {'Authorization': token}
 
         else:
-            raise Exception(
-                f"Unexpected status code: {self.response.status_code}")
+            raise Exception(f"Unexpected status code: {self.response.status_code}")
 
     def check_objs_in_auh(self, body):
         if self.json is None:
-            raise ValueError(
-                "JSON response is None")
-        assert ('lyadov' in self.json) == ('lyadov' in body), \
-            'Пользователь не найден'
+            raise ValueError("JSON response is None")
+        assert ('lyadov' in self.json) == ('lyadov' in body), 'Пользователь не найден'
         assert 'token' in self.json, 'token не найдет'

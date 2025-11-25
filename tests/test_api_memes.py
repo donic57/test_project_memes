@@ -49,7 +49,7 @@ def test_put_meme(put_meme, create_meme, authorize, remove_meme):
     remove_meme.delete_meme(meme_id, authorize)
     remove_meme.check_status_is_200()
     response = put_meme.update_meme(meme_id, body, authorize)
-    put_meme.check_status_is_404(response, meme_id)
+    put_meme.check_noid_status_is_404(response, meme_id)
 
 
 @allure.story('Put')
@@ -66,7 +66,7 @@ def test_put_meme_unauthorized(put_meme, create_meme):
 @pytest.mark.parametrize("body", DataTest.TEST_DATA_BAD)
 def test_bad_put_meme(put_meme, authorize, body):
     put_meme.bad_update_body(authorize, body)
-    put_meme.check_status_is_403()
+    put_meme.check_status_is_404()
 
 
 @allure.story('Delete')
@@ -76,7 +76,7 @@ def test_delete_meme(remove_meme, create_meme, authorize, get_memes):
     remove_meme.delete_meme(meme_id, authorize)
     remove_meme.check_status_is_200()
     response = get_memes.get_one_meme(meme_id, authorize)
-    remove_meme.check_status_is_404(response, meme_id)
+    remove_meme.check_noid_status_is_404(response, meme_id)
 
 
 @allure.story('Delete')

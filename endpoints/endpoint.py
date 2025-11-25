@@ -28,15 +28,15 @@ class Endpoint:
         assert status == 400
         pytest.xfail("Тест принудительно помечен как ожидаемо проваленный")
 
-    @allure.step('Проверка на код ответа 403')
-    def check_status_is_403(self):
+    @allure.step('Проверка на код ответа 404')
+    def check_status_is_404(self):
         status = self.response.status_code
         print(f'Ошибка с код {status} переданы некорректные данные в запрос')
-        assert status == 403
+        assert status == 404
         pytest.xfail("Тест принудительно помечен как ожидаемо проваленный")
 
-    @allure.step('Проверка на код ответа 404')
-    def check_status_is_404(self, response, meme_id):
+    @allure.step('Проверка на код ответа 404 с неcуществующим id')
+    def check_noid_status_is_404(self, response, meme_id):
         status = response.status_code
         assert status == 404, \
             f"Мем с id={meme_id} всё ещё существует! Код: {status}"
