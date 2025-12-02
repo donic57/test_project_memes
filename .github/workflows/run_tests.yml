@@ -45,7 +45,7 @@ jobs:
           distribution: 'microsoft' # See 'Supported distributions' for available options
           java-version: '17'
       - name: Install allure
-        run: sudo wget https://github.com/allure-framework/allure2/releases/download/2.35.1/allure-2.35.1.tgz && tar -zxvf allure-2.35.1.tgz -C /opt/ && ln -s /opt/allure-2.35.1/bin/allure /usr/bin/allure
+        run: sudo wget https://github.com/allure-framework/allure2/releases/download/2.35.1/allure-2.35.1.tgz && tar -zxvf allure-2.35.1.tgz -C /opt/ && sudo ln -s /opt/allure-2.35.1/bin/allure /usr/bin/allure
       - name: Generate reports
         run: allure generate -c allure-results -o allure-report
       - name: Save allure report
