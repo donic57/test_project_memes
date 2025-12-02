@@ -51,10 +51,22 @@ jobs:
       - name: Install allure
         run: sudo wget https://github.com/allure-framework/allure2/releases/download/2.35.1/allure-2.35.1.tgz && tar -zxvf allure-2.35.1.tgz -C /opt/ && sudo ln -s /opt/allure-2.35.1/bin/allure /usr/bin/allure
       - name: Generate reports
-        run: allure generate -c allure-results -o allure-report
+        run: allure generate -c allure-results -o _site
       - name: Save allure report
         uses: actions/upload-artifact@v5
         with:
-          name: allure-report
-          path: allure-report
+          name: _site
+          path: _site
           retention-days: 1
+          
+  publish-report:
+    name: Report publication
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
