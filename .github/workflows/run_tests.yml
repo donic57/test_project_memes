@@ -1,6 +1,18 @@
 name: Python autotests
 
-on: [push]
+on:
+  workflow_dispatch:
+    inputs:
+      deployment_target:
+        description: choice tests set
+        required: true
+        type: choice
+        default: smoke
+        options:
+          - smoke
+          - regression
+          - extended
+          - all
 
 jobs:
   run-tests:
