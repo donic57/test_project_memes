@@ -6,6 +6,7 @@ from data.data_test import DataTest
 import requests
 
 
+@pytest.mark.smoke
 @allure.story('Get')
 @allure.title('Вызов get запроса со всеми мэмами')
 def test_get_memes(get_memes, authorize):
@@ -14,6 +15,7 @@ def test_get_memes(get_memes, authorize):
     get_memes.check_data_response()
 
 
+@pytest.mark.regression
 @allure.story('Get')
 @allure.title('Вызов get запроса со всеми мэмами и получение статус кода 401')
 def test_get_meme_unauthorized(get_memes):
@@ -21,6 +23,7 @@ def test_get_meme_unauthorized(get_memes):
     get_memes.check_status_is_401()
 
 
+@pytest.mark.regression
 @allure.story('Get')
 @allure.title('Вызов get запроса с одним мэмом по id')
 def test_one_meme(get_memes, create_meme, authorize):
@@ -30,6 +33,7 @@ def test_one_meme(get_memes, create_meme, authorize):
     get_memes.check_objs_in_body(meme_id, meme_body)
 
 
+@pytest.mark.extended
 @allure.story('Get')
 @allure.title('Вызов get запроса с одним мэмом по id без авторизации')
 def test_one_meme_unauthorized(get_memes, create_meme):
@@ -38,6 +42,7 @@ def test_one_meme_unauthorized(get_memes, create_meme):
     get_memes.check_status_is_401()
 
 
+@pytest.mark.smoke
 @allure.story('Put')
 @allure.title('Обновление put запросом по id')
 def test_put_meme(put_meme, create_meme, authorize, remove_meme):
@@ -52,6 +57,7 @@ def test_put_meme(put_meme, create_meme, authorize, remove_meme):
     put_meme.check_noid_status_is_404(response, meme_id)
 
 
+@pytest.mark.extended
 @allure.story('Put')
 @allure.title('Обновление put запросом по id без авторизации')
 def test_put_meme_unauthorized(put_meme, create_meme):
@@ -61,6 +67,7 @@ def test_put_meme_unauthorized(put_meme, create_meme):
     put_meme.check_status_is_401()
 
 
+@pytest.mark.extended
 @allure.story('Put')
 @allure.title('Обновление put запросом c некорректными данными')
 @pytest.mark.parametrize("body", DataTest.TEST_DATA_BAD)
@@ -69,6 +76,7 @@ def test_bad_put_meme(put_meme, authorize, body):
     put_meme.check_status_is_404()
 
 
+@pytest.mark.regression
 @allure.story('Delete')
 @allure.title('Удаление мэма по id')
 def test_delete_meme(remove_meme, create_meme, authorize, get_memes):
@@ -79,6 +87,7 @@ def test_delete_meme(remove_meme, create_meme, authorize, get_memes):
     remove_meme.check_noid_status_is_404(response, meme_id)
 
 
+@pytest.mark.extended
 @allure.story('Delete')
 @allure.title('Удаление мэма по id без авторизации')
 def test_delete_meme_unauthorized(remove_meme, create_meme):
@@ -87,6 +96,7 @@ def test_delete_meme_unauthorized(remove_meme, create_meme):
     remove_meme.check_status_is_401()
 
 
+@pytest.mark.regression
 @allure.story('Post')
 @allure.title('Запуск авторизации и проверка запроса и ответа')
 def test_auh():
@@ -97,6 +107,7 @@ def test_auh():
     auh.check_objs_in_auh(body)
 
 
+@pytest.mark.extended
 @allure.story('Post')
 @allure.title('Неуспешная авторизация с невалидными данными')
 def test_auth_failure():
@@ -107,6 +118,7 @@ def test_auth_failure():
     auh.check_status_is_400()
 
 
+@pytest.mark.extended
 @allure.story('Post')
 @allure.title('Создание мэма без авторизации')
 def test_create_meme_unauthorized():
@@ -115,6 +127,7 @@ def test_create_meme_unauthorized():
     result.check_status_is_401()
 
 
+@pytest.mark.extended
 @allure.story('Post')
 @allure.title('Создание неуспешного мэма с ожидаемым результатом')
 @pytest.mark.parametrize("body", DataTest.TEST_DATA)
@@ -124,6 +137,7 @@ def test_bad_create_meme(authorize, body):
     result.check_status_is_400()
 
 
+@pytest.mark.smoke
 @allure.story('Post')
 @allure.title('Создание успешного мэма с пустыми строками')
 @pytest.mark.parametrize("body", DataTest.TEST_DATA_OK)
