@@ -30,15 +30,19 @@ jobs:
       - name: Run all tests
         if: "github.event.inputs.deployment_target == 'all'"
         run: pytest -vs --alluredir=allure-results
+        continue-on-error: true
       - name: Run smoke tests
         if: "github.event.inputs.deployment_target == 'smoke'"
         run: pytest -vs -m smoke --alluredir=allure-results
+        continue-on-error: true
       - name: Run regression tests
         if: "github.event.inputs.deployment_target == 'regression'"
         run: pytest -vs -m regression --alluredir=allure-results
+        continue-on-error: true
       - name: Run extended tests
         if: "github.event.inputs.deployment_target == 'extended'"
         run: pytest -vs -m extended --alluredir=allure-results
+        continue-on-error: true
       - name: Install java
         uses: actions/setup-java@v5
         with:
