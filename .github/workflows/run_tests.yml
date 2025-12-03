@@ -57,7 +57,7 @@ jobs:
           mkdir -p old_pages pages_history
           unzip -o pages.zip -d old_pages
           tar -xvf old_pages/artifact.tar -C pages_history
-      - run: cp pages_history/history/* allure-history && cp -r pages_history/history allure-history
+      - run: cp pages_history/history/* _site && cp -r pages_history/history _site
       - name: Save allure history
         uses: actions/upload-artifact@v5
         with:
