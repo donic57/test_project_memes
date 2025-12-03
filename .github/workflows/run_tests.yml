@@ -54,12 +54,10 @@ jobs:
           unzip -o artifacts.zip -d _site
       - name: Extract pages
         run: с
-          mkdir -p old_pages pages_history
+          mkdir -p old_pages pages_history allure-history
           unzip -o pages.zip -d old_pages
           tar -xvf old_pages/artifact.tar -C pages_history
-      - run: |
-          mkdir -p allure-history
-          cp pages_history/history/* allure-history && cp -r pages_history/history allure-history
+      - run: cp pages_history/history/* allure-history && cp -r pages_history/history allure-history
       - name: Save allure history
         uses: actions/upload-artifact@v5
         with:
