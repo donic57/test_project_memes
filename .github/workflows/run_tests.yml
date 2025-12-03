@@ -77,26 +77,3 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
         
-      - name: Load test report history
-        uses: actions/checkout@v6
-        if: always()
-        continue-on-error: true
-        with:
-          ref: main
-          path: maim
-
-      - name: Build test report
-        uses: simple-elf/allure-report-action@v1.13
-        if: always()
-        with:
-          main: main
-          allure_history: allure-history
-          allure_results: build/allure-results
-
-      - name: Publish test report
-        uses: peaceiris/actions-gh-pages@v4
-        if: always()
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: main
-          publish_dir: allure-history
