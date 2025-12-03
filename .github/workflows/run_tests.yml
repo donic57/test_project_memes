@@ -21,7 +21,7 @@ permissions:
 
 jobs:
   download-history:
-    runs-on: ubuntu-lates
+    runs-on: ubuntu-latest
     name: Download history
     steps:
       - name: Set up Python environment
