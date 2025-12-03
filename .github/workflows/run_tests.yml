@@ -45,7 +45,7 @@ jobs:
       - name: Save allure history
         uses: actions/upload-artifact@v5
         with:
-          name: _site
+          name: allure-history
           path: _site
           retention-days: 1
 
@@ -62,8 +62,11 @@ jobs:
           python-version: '3.13'
       - name: Install dependencies
         run: pip install -r requirements.txt
-      - name: Download artifacts
+      - name: Download history artifacts
         uses: actions/download-artifact@v4
+        with:
+          name: allure-history
+          path: _site
       - name: Run all tests
         if: "github.event.inputs.deployment_target == 'all'"
         run: pytest -vs --alluredir=allure-results
