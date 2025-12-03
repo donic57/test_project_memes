@@ -53,7 +53,7 @@ jobs:
           mkdir -p _site
           unzip -o artifacts.zip -d _site
       - name: Extract pages
-        run: с
+        run: |
           mkdir -p old_pages pages_history allure-history
           unzip -o pages.zip -d old_pages
           tar -xvf old_pages/artifact.tar -C pages_history
