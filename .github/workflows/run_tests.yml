@@ -28,244 +28,77 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: '3.13'
-      
-      - name: Debug - Start download history
-        run: echo "=== STARTING DOWNLOAD HISTORY JOB ==="
-      
-      - name: Download previous artifacts
+      - run: >
+          ARTIFACT_ID=$(curl -L -H "Accept: application/vnd.github+json" -H 
+          "X-GitHub-Api-Version: 2022-11-28" 
+          "https://api.github.com/repos/donic57/test_project_memes/actions/artifacts?name=allure-results" 
+          | python3 -c "import sys, json; print(json.load(sys.stdin)['artifacts'][0]['id']);")
+          &&
+          curl -L -H "Accept: application/vnd.github+json" 
+          -H "Authorization: Bearer ${{ secrets.TOKEN }}" 
+          -H "X-GitHub-Api-Version: 2022-11-28" 
+          "https://api.github.com/repos/donic57/test_project_memes/actions/artifacts/$ARTIFACT_ID/zip" -o artifacts.zip
+          &&
+          REPORT_ID=$(curl -L -H "Accept: application/vnd.github+json" -H 
+          "X-GitHub-Api-Version: 2022-11-28" 
+          "https://api.github.com/repos/donic57/test_project_memes/actions/artifacts?name=github-pages" 
+          | python3 -c "import sys, json; print(json.load(sys.stdin)['artifacts'][0]['id']);")
+          &&
+          curl -L -H "Accept: application/vnd.github+json" 
+          -H "Authorization: Bearer ${{ secrets.TOKEN }}" 
+          -H "X-GitHub-Api-Version: 2022-11-28" 
+          "https://api.github.com/repos/donic57/test_project_memes/actions/artifacts/$REPORT_ID/zip" -o pages.zip
+      - name: Extract artifact
         run: |
-          # Скачиваем artifact ID для allure-results
-          ARTIFACT_RESPONSE=$(curl -s -L -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" "https://api.github.com/repos/donic57/test_project_memes/actions/artifacts?name=allure-results")
-          ARTIFACT_ID=$(echo "$ARTIFACT_RESPONSE" | python3 -c "
-import sys, json
-try:
-    data = json.loads(sys.stdin.read())
-    if 'artifacts' in data and len(data['artifacts']) > 0:
-        print(data['artifacts'][0]['id'])
-    else:
-        print('NO_ARTIFACTS')
-except Exception as e:
-    print('ERROR')
-")
-          
-          echo "Artifact ID result: $ARTIFACT_ID"
-          
-          if [ "$ARTIFACT_ID" != "NO_ARTIFACTS" ] && [ "$ARTIFACT_ID" != "ERROR" ]; then
-            echo "Downloading results artifact ID: $ARTIFACT_ID"
-            curl -L -H "Accept: application/vnd.github+json" \
-              -H "Authorization: Bearer ${{ secrets.TOKEN }}" \
-              -H "X-GitHub-Api-Version: 2022-11-28" \
-              "https://api.github.com/repos/donic57/test_project_memes/actions/artifacts/$ARTIFACT_ID/zip" \
-              -o artifacts.zip
-          else
-            echo "No previous results artifact found or error"
-            touch artifacts.zip
-          fi
-          
-          # Скачиваем artifact ID для github-pages
-          REPORT_RESPONSE=$(curl -s -L -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" "https://api.github.com/repos/donic57/test_project_memes/actions/artifacts?name=github-pages")
-          REPORT_ID=$(echo "$REPORT_RESPONSE" | python3 -c "
-import sys, json
-try:
-    data = json.loads(sys.stdin.read())
-    if 'artifacts' in data and len(data['artifacts']) > 0:
-        print(data['artifacts'][0]['id'])
-    else:
-        print('NO_ARTIFACTS')
-except Exception as e:
-    print('ERROR')
-")
-          
-          echo "Report ID result: $REPORT_ID"
-          
-          if [ "$REPORT_ID" != "NO_ARTIFACTS" ] && [ "$REPORT_ID" != "ERROR" ]; then
-            echo "Downloading pages artifact ID: $REPORT_ID"
-            curl -L -H "Accept: application/vnd.github+json" \
-              -H "Authorization: Bearer ${{ secrets.TOKEN }}" \
-              -H "X-GitHub-Api-Version: 2022-11-28" \
-              "https://api.github.com/repos/donic57/test_project_memes/actions/artifacts/$REPORT_ID/zip" \
-              -o pages.zip
-          else
-            echo "No previous pages artifact found or error"
-            touch pages.zip
-          fi
-      
-      - name: Debug - Check downloaded files
-        run: |
-          echo "=== CHECKING DOWNLOADED FILES ==="
-          ls -la *.zip
-          echo "Artifacts zip size: $(wc -c < artifacts.zip) bytes"
-          echo "Pages zip size: $(wc -c < pages.zip) bytes"
-      
-      - name: Extract and prepare results
-        run: |
-          echo "=== EXTRACTING ARTIFACTS ==="
           mkdir -p allure-results
-          
-          if [ -s artifacts.zip ]; then
-            echo "Extracting artifacts.zip..."
-            unzip -o artifacts.zip -d allure-results 2>/dev/null || echo "Failed to extract artifacts.zip"
-          else
-            echo "artifacts.zip is empty or doesn't exist"
-          fi
-          
-          echo "Current allure-results structure:"
-          find allure-results -type f -name "*.json" | head -10
-          echo "Total files in allure-results: $(find allure-results -type f | wc -l)"
-      
+          unzip -o artifacts.zip -d allure-results
       - name: Save allure history
         uses: actions/upload-artifact@v5
         with:
           name: allure-history
           path: allure-results
           retention-days: 1
-      
-      - name: Extract and process pages history
+      - name: Extract pages
         run: |
-          echo "=== EXTRACTING PAGES HISTORY ==="
           mkdir -p old_pages pages_history
-          
-          if [ -s pages.zip ]; then
-            echo "Extracting pages.zip..."
-            unzip -o pages.zip -d old_pages 2>/dev/null || echo "Failed to extract pages.zip"
-            
-            if [ -f "old_pages/artifact.tar" ]; then
-              echo "Extracting artifact.tar..."
-              tar -xvf old_pages/artifact.tar -C pages_history 2>/dev/null || echo "Failed to extract tar"
-            fi
-          fi
-          
-          echo "Pages history structure:"
-          find pages_history -type f -name "*.json" | head -10
-      
-      - name: Copy history to results
-        run: |
-          echo "=== COPYING HISTORY TO RESULTS ==="
-          mkdir -p allure-results/history
-          
-          # Ищем историю в разных местах
-          echo "Looking for history files..."
-          
-          # 1. В pages_history
-          if [ -d "pages_history/history" ]; then
-            echo "Found history in pages_history/history"
-            cp -r pages_history/history/* allure-results/history/ 2>/dev/null || true
-          fi
-          
-          # 2. В корне pages_history
-          find pages_history -name "history-trend.json" -o -name "duration-trend.json" | while read file; do
-            echo "Found history file: $file"
-            cp "$file" allure-results/history/ 2>/dev/null || true
-          done
-          
-          # 3. Проверяем, что скопировалось
-          echo "Final history in allure-results:"
-          if [ -d "allure-results/history" ]; then
-            ls -la allure-results/history/
-            echo "History files count: $(find allure-results/history -type f | wc -l)"
-          else
-            echo "WARNING: No history directory created!"
-          fi
+          unzip -o pages.zip -d old_pages
+          tar -xvf old_pages/artifact.tar -C pages_history
+      - run: cp pages_history/history/* allure-results && cp -r pages_history/history allure-results
 
   run-tests:
     runs-on: ubuntu-latest
     name: Run autotests
     needs: download-history
     steps:
-      - name: Debug - Start run tests
-        run: echo "=== STARTING RUN TESTS JOB ==="
-      
       - name: Checkout autotests
         uses: actions/checkout@v6
-      
       - name: Set up Python environment
         uses: actions/setup-python@v6
         with:
           python-version: '3.13'
-      
       - name: Install dependencies
         run: pip install -r requirements.txt
-      
       - name: Download history artifacts
         uses: actions/download-artifact@v4
         with:
           name: allure-history
-          path: history-temp
-      
-      - name: Debug - Check downloaded history
-        run: |
-          echo "=== CHECKING DOWNLOADED HISTORY ==="
-          echo "History temp structure:"
-          find history-temp -type f -name "*.json" | sort
-          echo ""
-          
-          if [ -d "history-temp/history" ]; then
-            echo "Found history directory with files:"
-            ls -la history-temp/history/
-          else
-            echo "No history directory found, checking root..."
-            find history-temp -name "history-trend.json" -o -name "duration-trend.json"
-          fi
-      
-      - name: Prepare test directory with history
-        run: |
-          echo "=== PREPARING TEST DIRECTORY ==="
-          mkdir -p allure-results
-          
-          # Копируем историю, если она есть
-          if [ -d "history-temp/history" ]; then
-            echo "Copying history from history-temp/history"
-            mkdir -p allure-results/history
-            cp -r history-temp/history/* allure-results/history/
-            echo "Copied history files:"
-            ls -la allure-results/history/
-          elif [ -f "history-temp/history-trend.json" ]; then
-            echo "Found history JSON files in root"
-            mkdir -p allure-results/history
-            cp history-temp/history-trend.json allure-results/history/ 2>/dev/null || true
-            cp history-temp/duration-trend.json allure-results/history/ 2>/dev/null || true
-          else
-            echo "No history found, starting fresh"
-          fi
-          
-          echo "Allure-results before tests:"
-          find allure-results -type f | sort
-      
+          path: allure-results
       - name: Run all tests
         if: "github.event.inputs.deployment_target == 'all'"
         run: pytest -vs --alluredir=allure-results
         continue-on-error: true
-      
       - name: Run smoke tests
         if: "github.event.inputs.deployment_target == 'smoke'"
         run: pytest -vs -m smoke --alluredir=allure-results
         continue-on-error: true
-      
       - name: Run regression tests
         if: "github.event.inputs.deployment_target == 'regression'"
         run: pytest -vs -m regression --alluredir=allure-results
         continue-on-error: true
-      
       - name: Run extended tests
         if: "github.event.inputs.deployment_target == 'extended'"
         run: pytest -vs -m extended --alluredir=allure-results
         continue-on-error: true
-      
-      - name: Debug - Check test results
-        run: |
-          echo "=== CHECKING TEST RESULTS ==="
-          echo "Total files in allure-results: $(find allure-results -type f | wc -l)"
-          echo "JSON files in allure-results:"
-          find allure-results -name "*.json" | sort
-          echo ""
-          
-          if [ -d "allure-results/history" ]; then
-            echo "History directory exists with files:"
-            ls -la allure-results/history/
-          else
-            echo "WARNING: No history directory after tests!"
-          fi
-      
       - name: Store allure results
         uses: actions/upload-artifact@v5
         with:
@@ -278,181 +111,32 @@ except Exception as e:
     needs: run-tests
     name: Generate report
     steps:
-      - name: Debug - Start generate report
-        run: echo "=== STARTING GENERATE REPORT JOB ==="
-      
-      - name: Download test results
-        uses: actions/download-artifact@v4
-        with:
-          name: allure-results
-          path: new-results
-      
-      - name: Download history artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: allure-history
-          path: old-history
-      
-      - name: Debug - Check all inputs
-        run: |
-          echo "=== DEBUGGING INPUTS ==="
-          echo "New results structure:"
-          find new-results -type f -name "*.json" | sort
-          echo ""
-          
-          echo "Old history structure:"
-          find old-history -type f -name "*.json" | sort
-          echo ""
-          
-          echo "Checking for history directories:"
-          echo "new-results/history exists: $([ -d "new-results/history" ] && echo "YES" || echo "NO")"
-          echo "old-history/history exists: $([ -d "old-history/history" ] && echo "YES" || echo "NO")"
-      
-      - name: Create combined results with history
-        run: |
-          echo "=== CREATING COMBINED RESULTS ==="
-          mkdir -p combined-results
-          
-          # Копируем новые результаты
-          echo "Copying new test results..."
-          if [ -d "new-results" ]; then
-            cp -r new-results/* combined-results/ 2>/dev/null || true
-          fi
-          
-          # Объединяем историю
-          echo "Merging history..."
-          mkdir -p combined-results/history
-          
-          # 1. Сначала старая история
-          if [ -d "old-history/history" ]; then
-            echo "Copying old history..."
-            cp -r old-history/history/* combined-results/history/ 2>/dev/null || true
-          elif [ -f "old-history/history-trend.json" ]; then
-            echo "Copying old history JSON files..."
-            cp old-history/history-trend.json combined-results/history/ 2>/dev/null || true
-            cp old-history/duration-trend.json combined-results/history/ 2>/dev/null || true
-          fi
-          
-          # 2. Затем история из новых результатов (если есть)
-          if [ -d "new-results/history" ]; then
-            echo "Merging new results history..."
-            cp -r new-results/history/* combined-results/history/ 2>/dev/null || true
-          fi
-          
-          echo "Final combined results structure:"
-          find combined-results -type f -name "*.json" | sort
-          echo ""
-          
-          if [ -d "combined-results/history" ]; then
-            echo "History files in combined-results:"
-            ls -la combined-results/history/
-          fi
-      
       - name: Install java
         uses: actions/setup-java@v5
         with:
           distribution: 'microsoft'
           java-version: '17'
-      
       - name: Install allure
-        run: |
-          echo "=== INSTALLING ALLURE ==="
-          sudo wget https://github.com/allure-framework/allure2/releases/download/2.35.1/allure-2.35.1.tgz
-          tar -zxvf allure-2.35.1.tgz -C /opt/
-          sudo ln -s /opt/allure-2.35.1/bin/allure /usr/bin/allure
-          echo "Allure version: $(allure --version || echo 'Not available')"
-      
-      - name: Generate allure report
-        run: |
-          echo "=== GENERATING ALLURE REPORT ==="
-          
-          # Проверяем, что есть что генерировать
-          echo "Files in combined-results:"
-          find combined-results -type f | wc -l
-          
-          # Генерируем отчет
-          allure generate combined-results -o _site --clean
-          
-          echo "=== REPORT GENERATION COMPLETE ==="
-          echo "Files in _site: $(find _site -type f | wc -l)"
-          
-          # Проверяем историю в сгенерированном отчете
-          if [ -d "_site/history" ]; then
-            echo "History in generated report:"
-            ls -la _site/history/
-            
-            # Проверяем ключевые файлы истории
-            echo "Checking key history files:"
-            echo "history-trend.json exists: $([ -f "_site/history/history-trend.json" ] && echo "YES (size: $(wc -c < _site/history/history-trend.json) bytes)" || echo "NO")"
-            echo "duration-trend.json exists: $([ -f "_site/history/duration-trend.json" ] && echo "YES (size: $(wc -c < _site/history/duration-trend.json) bytes)" || echo "NO")"
-            
-            # Показываем содержимое history-trend.json
-            if [ -f "_site/history/history-trend.json" ]; then
-              echo "First 5 lines of history-trend.json:"
-              head -5 _site/history/history-trend.json
-            fi
-          else
-            echo "ERROR: No history directory in generated report!"
-            echo "_site structure:"
-            find _site -maxdepth 2 -type f | sort
-          fi
-      
-      - name: Add .nojekyll for GitHub Pages
-        run: |
-          echo "=== ADDING .NOJEKYLL FILE ==="
-          touch _site/.nojekyll
-          echo "Files in _site root:"
-          ls -la _site/
-      
+        run: sudo wget https://github.com/allure-framework/allure2/releases/download/2.35.1/allure-2.35.1.tgz && tar -zxvf allure-2.35.1.tgz -C /opt/ && sudo ln -s /opt/allure-2.35.1/bin/allure /usr/bin/allure
+      - name: Generate reports
+        run: allure generate -c allure-results -o _site
       - name: Save allure report
         uses: actions/upload-artifact@v5
         with:
           name: _site
           path: _site
           retention-days: 1
-
+          
   publish-report:
     name: Report publication
     runs-on: ubuntu-latest
     needs: generate-report
     steps:
-      - name: Debug - Start publish report
-        run: echo "=== STARTING PUBLISH REPORT JOB ==="
-      
       - name: Download artifacts
         uses: actions/download-artifact@v4
-        with:
-          name: _site
-          path: _site
-      
-      - name: Debug - Check downloaded report
-        run: |
-          echo "=== CHECKING DOWNLOADED REPORT ==="
-          echo "_site directory structure:"
-          ls -la _site/
-          echo ""
-          
-          if [ -d "_site/history" ]; then
-            echo "History files in report:"
-            ls -la _site/history/
-            echo ""
-            echo "Trend file check:"
-            if [ -f "_site/history/history-trend.json" ]; then
-              echo "✅ history-trend.json found"
-              echo "File size: $(wc -c < _site/history/history-trend.json) bytes"
-              echo "JSON entries: $(python3 -c \"import json; data=json.load(open('_site/history/history-trend.json')); print(len(data))\" 2>/dev/null || echo \"Invalid JSON\")"
-            else
-              echo "❌ history-trend.json NOT FOUND"
-            fi
-          else
-            echo "❌ No history directory in _site"
-          fi
-      
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4
-        with:
-          path: _site
-      
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+        
