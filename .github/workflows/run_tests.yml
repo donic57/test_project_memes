@@ -33,57 +33,61 @@ jobs:
         run: echo "=== STARTING DOWNLOAD HISTORY JOB ==="
       
       - name: Download previous artifacts
-        run: >
-          ARTIFACT_ID=$(curl -L -H "Accept: application/vnd.github+json" -H 
-          "X-GitHub-Api-Version: 2022-11-28" 
-          "https://api.github.com/repos/donic57/test_project_memes/actions/artifacts?name=allure-results" 
-          | python3 -c "
-          import sys, json;
-          try:
-              data = json.load(sys.stdin);
-              if 'artifacts' in data and len(data['artifacts']) > 0:
-                  print(data['artifacts'][0]['id']);
-              else:
-                  print('NO_ARTIFACTS');
-          except Exception as e:
-              print('ERROR_' + str(e));
-          ")
-          &&
-          if [ "$ARTIFACT_ID" != "NO_ARTIFACTS" ] && [[ ! "$ARTIFACT_ID" == ERROR_* ]]; then
-            echo "Downloading results artifact ID: $ARTIFACT_ID";
-            curl -L -H "Accept: application/vnd.github+json" 
-            -H "Authorization: Bearer ${{ secrets.TOKEN }}" 
-            -H "X-GitHub-Api-Version: 2022-11-28" 
-            "https://api.github.com/repos/donic57/test_project_memes/actions/artifacts/$ARTIFACT_ID/zip" -o artifacts.zip;
+        run: |
+          # Скачиваем artifact ID для allure-results
+          ARTIFACT_RESPONSE=$(curl -s -L -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" "https://api.github.com/repos/donic57/test_project_memes/actions/artifacts?name=allure-results")
+          ARTIFACT_ID=$(echo "$ARTIFACT_RESPONSE" | python3 -c "
+import sys, json
+try:
+    data = json.loads(sys.stdin.read())
+    if 'artifacts' in data and len(data['artifacts']) > 0:
+        print(data['artifacts'][0]['id'])
+    else:
+        print('NO_ARTIFACTS')
+except Exception as e:
+    print('ERROR')
+")
+          
+          echo "Artifact ID result: $ARTIFACT_ID"
+          
+          if [ "$ARTIFACT_ID" != "NO_ARTIFACTS" ] && [ "$ARTIFACT_ID" != "ERROR" ]; then
+            echo "Downloading results artifact ID: $ARTIFACT_ID"
+            curl -L -H "Accept: application/vnd.github+json" \
+              -H "Authorization: Bearer ${{ secrets.TOKEN }}" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "https://api.github.com/repos/donic57/test_project_memes/actions/artifacts/$ARTIFACT_ID/zip" \
+              -o artifacts.zip
           else
-            echo "No previous results artifact found or error: $ARTIFACT_ID";
-            touch artifacts.zip;
+            echo "No previous results artifact found or error"
+            touch artifacts.zip
           fi
-          &&
-          REPORT_ID=$(curl -L -H "Accept: application/vnd.github+json" -H 
-          "X-GitHub-Api-Version: 2022-11-28" 
-          "https://api.github.com/repos/donic57/test_project_memes/actions/artifacts?name=github-pages" 
-          | python3 -c "
-          import sys, json;
-          try:
-              data = json.load(sys.stdin);
-              if 'artifacts' in data and len(data['artifacts']) > 0:
-                  print(data['artifacts'][0]['id']);
-              else:
-                  print('NO_ARTIFACTS');
-          except Exception as e:
-              print('ERROR_' + str(e));
-          ")
-          &&
-          if [ "$REPORT_ID" != "NO_ARTIFACTS" ] && [[ ! "$REPORT_ID" == ERROR_* ]]; then
-            echo "Downloading pages artifact ID: $REPORT_ID";
-            curl -L -H "Accept: application/vnd.github+json" 
-            -H "Authorization: Bearer ${{ secrets.TOKEN }}" 
-            -H "X-GitHub-Api-Version: 2022-11-28" 
-            "https://api.github.com/repos/donic57/test_project_memes/actions/artifacts/$REPORT_ID/zip" -o pages.zip;
+          
+          # Скачиваем artifact ID для github-pages
+          REPORT_RESPONSE=$(curl -s -L -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" "https://api.github.com/repos/donic57/test_project_memes/actions/artifacts?name=github-pages")
+          REPORT_ID=$(echo "$REPORT_RESPONSE" | python3 -c "
+import sys, json
+try:
+    data = json.loads(sys.stdin.read())
+    if 'artifacts' in data and len(data['artifacts']) > 0:
+        print(data['artifacts'][0]['id'])
+    else:
+        print('NO_ARTIFACTS')
+except Exception as e:
+    print('ERROR')
+")
+          
+          echo "Report ID result: $REPORT_ID"
+          
+          if [ "$REPORT_ID" != "NO_ARTIFACTS" ] && [ "$REPORT_ID" != "ERROR" ]; then
+            echo "Downloading pages artifact ID: $REPORT_ID"
+            curl -L -H "Accept: application/vnd.github+json" \
+              -H "Authorization: Bearer ${{ secrets.TOKEN }}" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "https://api.github.com/repos/donic57/test_project_memes/actions/artifacts/$REPORT_ID/zip" \
+              -o pages.zip
           else
-            echo "No previous pages artifact found or error: $REPORT_ID";
-            touch pages.zip;
+            echo "No previous pages artifact found or error"
+            touch pages.zip
           fi
       
       - name: Debug - Check downloaded files
@@ -436,7 +440,7 @@ jobs:
             if [ -f "_site/history/history-trend.json" ]; then
               echo "✅ history-trend.json found"
               echo "File size: $(wc -c < _site/history/history-trend.json) bytes"
-              echo "JSON entries: $(python3 -c "import json; data=json.load(open('_site/history/history-trend.json')); print(len(data))" 2>/dev/null || echo "Invalid JSON")"
+              echo "JSON entries: $(python3 -c \"import json; data=json.load(open('_site/history/history-trend.json')); print(len(data))\" 2>/dev/null || echo \"Invalid JSON\")"
             else
               echo "❌ history-trend.json NOT FOUND"
             fi
