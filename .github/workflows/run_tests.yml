@@ -55,7 +55,7 @@ jobs:
       - name: Save allure history
         uses: actions/upload-artifact@v5
         with:
-          name: allure-results
+          name: allure-history
           path: allure-results
           retention-days: 1
       - name: Extract pages
