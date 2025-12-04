@@ -52,18 +52,18 @@ jobs:
         run: |
           mkdir -p allure-results
           unzip -o artifacts.zip -d allure-results
-      - name: Save allure history
-        uses: actions/upload-artifact@v5
-        with:
-          name: allure-history
-          path: allure-results
-          retention-days: 1
       - name: Extract pages
         run: |
           mkdir -p old_pages pages_history
           unzip -o pages.zip -d old_pages
           tar -xvf old_pages/artifact.tar -C pages_history
       - run: cp pages_history/history/* allure-results && cp -r pages_history/history allure-results
+      - name: Save allure history
+        uses: actions/upload-artifact@v5
+        with:
+          name: allure-results
+          path: allure-results
+          retention-days: 1
 
   run-tests:
     runs-on: ubuntu-latest
@@ -80,9 +80,6 @@ jobs:
         run: pip install -r requirements.txt
       - name: Download history artifacts
         uses: actions/download-artifact@v4
-        with:
-          name: allure-history
-          path: allure-results
       - name: Run all tests
         if: "github.event.inputs.deployment_target == 'all'"
         run: pytest -vs --alluredir=allure-results
