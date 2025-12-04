@@ -60,10 +60,10 @@ jobs:
           retention-days: 1
       - name: Extract pages
         run: |
-          mkdir -p old_pages pages_history allure-history
+          mkdir -p old_pages pages_history
           unzip -o pages.zip -d old_pages
           tar -xvf old_pages/artifact.tar -C pages_history
-      - run: cp pages_history/history/* allure-history && cp -r pages_history/history allure-history
+      - run: cp pages_history/history/* _site && cp -r pages_history/history _site
 
   run-tests:
     runs-on: ubuntu-latest
