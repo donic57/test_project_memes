@@ -118,6 +118,8 @@ jobs:
           java-version: '17'
       - name: Install allure
         run: sudo wget https://github.com/allure-framework/allure2/releases/download/2.35.1/allure-2.35.1.tgz && tar -zxvf allure-2.35.1.tgz -C /opt/ && sudo ln -s /opt/allure-2.35.1/bin/allure /usr/bin/allure
+      - name: Download all workflow run artifacts
+        uses: actions/download-artifact@v4
       - name: Generate reports
         run: allure generate -c allure-results -o _site
       - name: Save allure report
