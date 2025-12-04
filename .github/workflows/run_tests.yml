@@ -63,7 +63,12 @@ jobs:
           mkdir -p old_pages pages_history
           unzip -o pages.zip -d old_pages
           tar -xvf old_pages/artifact.tar -C pages_history
-      - run: cp pages_history/history/* allure-results && cp -r pages_history/history allure-results
+      - name: Copy history to results
+        run: |
+          mkdir -p allure-results/history
+          if [ -d "pages_history/history" ]; then
+            cp -r pages_history/history/* allure-results/history/
+          fi
 
   run-tests:
     runs-on: ubuntu-latest
@@ -111,15 +116,39 @@ jobs:
     needs: run-tests
     name: Generate report
     steps:
+      - name: Download test results
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-results
+          path: allure-results
+      
+      - name: Download history artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-history
+          path: allure-history
+      
       - name: Install java
         uses: actions/setup-java@v5
         with:
           distribution: 'microsoft'
           java-version: '17'
+      
       - name: Install allure
         run: sudo wget https://github.com/allure-framework/allure2/releases/download/2.35.1/allure-2.35.1.tgz && tar -zxvf allure-2.35.1.tgz -C /opt/ && sudo ln -s /opt/allure-2.35.1/bin/allure /usr/bin/allure
-      - name: Generate reports
-        run: allure generate -c allure-results -o _site
+      
+      - name: Copy history to results
+        run: |
+          # Создаем папку history в результатах, если её нет
+          mkdir -p allure-results/history
+          # Копируем историю из предыдущего артефакта
+          if [ -d "allure-history/history" ]; then
+            cp -r allure-history/history/* allure-results/history/
+          fi
+      
+      - name: Generate reports with history
+        run: allure generate allure-results -o _site --clean
+      
       - name: Save allure report
         uses: actions/upload-artifact@v5
         with:
@@ -134,9 +163,13 @@ jobs:
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v4
+        with:
+          name: _site
+          path: _site
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-        
