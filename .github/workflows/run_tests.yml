@@ -131,7 +131,7 @@ jobs:
   publish-report:
     name: Report publication
     runs-on: ubuntu-latest
-    needs: run-tests
+    needs: generate-report
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v4
