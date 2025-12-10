@@ -24,53 +24,45 @@ jobs:
     runs-on: ubuntu-latest
     name: Download history
     steps:
-      - name: Download previous allure results
-        uses: dawidd6/action-download-artifact@v6
+      - name: Create base directory
+        run: mkdir -p allure-results
+
+      - name: Try to download previous results (optional)
+        continue-on-error: true
+        uses: actions/download-artifact@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          workflow: .github/workflows/autotests.yml
           name: allure-results
           path: allure-results
-          check_artifacts: false
-          skip_unpack: false
-      
-      - name: Download previous report pages
-        uses: dawidd6/action-download-artifact@v6
+
+      - name: Try to download previous pages (optional)
+        continue-on-error: true
+        uses: actions/download-artifact@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          workflow: .github/workflows/autotests.yml
           name: github-pages
           path: pages_history
-          check_artifacts: false
-          skip_unpack: false
-      
-      - name: Extract pages history if needed
+
+      - name: Extract pages history if archive exists
         run: |
-          # Если скачали tar архив, распаковываем его
           if [ -f "pages_history/artifact.tar" ]; then
-            echo "Extracting artifact.tar..."
+            echo "Found history archive. Extracting..."
             mkdir -p extracted_history
             tar -xvf pages_history/artifact.tar -C extracted_history 2>/dev/null || true
-            
-            # Копируем историю в allure-results если есть
             if [ -d "extracted_history/history" ]; then
               echo "Copying history to allure-results..."
-              mkdir -p allure-results
               cp -r extracted_history/history/* allure-results/ 2>/dev/null || true
               cp -r extracted_history/history allure-results/ 2>/dev/null || true
             fi
-          fi
-      
-      - name: Ensure allure-results directory exists
-        run: |
-          if [ ! -d "allure-results" ]; then
-            echo "Creating empty allure-results directory"
-            mkdir -p allure-results
           else
-            echo "Allure-results directory exists with $(find allure-results -type f | wc -l) files"
+            echo "No previous history archive found. This is normal for the first run."
           fi
-      
-      - name: Save prepared history
+
+      - name: Verify and list contents
+        run: |
+          echo "Contents of allure-results directory:"
+          find allure-results -type f | head -20 || true
+          echo "Total files: $(find allure-results -type f 2>/dev/null | wc -l)"
+
+      - name: Save prepared allure results
         uses: actions/upload-artifact@v5
         with:
           name: allure-old
@@ -178,7 +170,6 @@ jobs:
           ls -la allure-results/
           echo "Total files: $(find allure-results -type f | wc -l)"
           
-          # Проверяем есть ли результаты тестов
           if [ $(find allure-results -name "*.json" -o -name "*.xml" | wc -l) -eq 0 ]; then
             echo "WARNING: No test result files found. Creating dummy result for report."
             mkdir -p allure-results
@@ -189,7 +180,6 @@ jobs:
         run: |
           allure generate -c allure-results -o _site --clean
           
-          # Проверяем сгенерированный отчет
           if [ -d "_site" ]; then
             echo "Report generated successfully"
             echo "Report size: $(du -sh _site)"
@@ -200,7 +190,6 @@ jobs:
       
       - name: Create tar archive for pages
         run: |
-          # Создаем tar архив с историей для следующего запуска
           mkdir -p pages_artifact
           if [ -d "_site/history" ]; then
             echo "Creating history archive..."
