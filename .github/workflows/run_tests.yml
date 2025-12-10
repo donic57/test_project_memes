@@ -68,6 +68,7 @@ jobs:
           name: allure-old
           path: allure-results
           retention-days: 1
+          if-no-files-found: warn  # Ключевое изменение!
 
   run-tests:
     runs-on: ubuntu-latest
@@ -88,6 +89,7 @@ jobs:
           pip install -r requirements.txt
       
       - name: Download history artifacts
+        continue-on-error: true  # Ключевое изменение!
         uses: actions/download-artifact@v4
         with:
           name: allure-old
